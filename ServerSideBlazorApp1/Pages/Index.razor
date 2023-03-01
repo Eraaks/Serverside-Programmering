@@ -1,0 +1,28 @@
+﻿@using System.Security.Cryptography;
+@inject ServerSideBlazorApp1.Codes.EncryptionTest _encryptionTest;
+@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+@code{
+    protected override void OnInitialized()
+    {
+        string result = _encryptionTest.Protect("Hello World");
+        result = _encryptionTest.UnProtect(result);
+
+        //string myPassword = "password1";
+
+        //MD5 md5 = MD5.Create();
+        //string? salt = "flkajfakjdahkldwajhdawkjdahk";
+        //byte[] passwordByte = System.Text.Encoding.UTF8.GetBytes(myPassword + salt);
+        //byte[] hash = md5.ComputeHash(passwordByte);
+        //string convertedHash = Convert.ToBase64String(hash);
+
+        //string bCryptSalt = BCrypt.Net.BCrypt.GenerateSalt(10);
+        //bCryptSalt = "$2a$11$Ir38k3NKBg1IWq4EXhY.ne";
+        //string bCryptHash = BCrypt.Net.BCrypt.HashPassword(myPassword, bCryptSalt);
+        //bool matched = BCrypt.Net.BCrypt.Verify(myPassword, bCryptHash);
+    }
+}
