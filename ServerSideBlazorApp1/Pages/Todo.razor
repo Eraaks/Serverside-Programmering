@@ -1,0 +1,183 @@
+﻿@using Microsoft.AspNetCore.Mvc;
+@using ServerSideBlazorApp1.Models;
+@inject ServerSideBlazorApp1.Codes.EncryptionTest _encryptionTest;
+@inject ServerSideBlazorApp1.Codes.ToDoDbHandler _toDoDBHandler;
+@inject ServerSideBlazorApp1.Models.TodoDbContext _toDoContext;
+@inject NavigationManager _navigationManager;
+@*@inject HashingTest _hashingTest;*@
+@*@attribute [Authorize(Policy = "RequireAuthenticatedUser")]*@
+
+@page "/todo"
+
+<PageTitle>Todo</PageTitle>
+<AuthorizeView>
+    <Authorized>
+        <PageTitle>Authorized Todo</PageTitle>
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                @if(ErrorMessage != null)
+                {
+                    <div>@ErrorMessage</div>
+                }
+
+                <h3>@CurrentUser ToDo List</h3>
+                <hr />
+                @if(TodoListViewModel != null)
+                {
+                    @foreach (var todo in TodoListViewModel)
+                    {
+                        <p>Item: @todo.ToDoItem, Description: @todo.ToDoDescription</p>
+                    }
+                }
+                <hr />
+                <div style="text-align:center; margin: 0 auto;">
+                    <div style="text-align: left;">
+                        <b>Item:</b>
+                        <br />
+                        <input type="text" style="width:100%;" @bind="Item"/>
+                    </div>
+                    <div style="text-align: left; margin-top: 10px;">
+                        <b>Beskrivelse:</b>
+                        <br />
+                        <input type="text" style="width:100%;" @bind="Beskrivelse" />
+                    </div>
+
+                    <input @onclick="Submit"
+                        type="button"
+                        class="btn-primary"
+                        value="Submit"
+                        style="width:100%; height: 45px; margin-top:10px;"/>
+                </div>
+
+                <input @onclick="ValiderListWithHash"
+                       type="button"
+                       class="btn-danger"
+                       value="Valider list med hash"
+                       style="width:100%; height: 45px; margin-top:10px;" />
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        @*
+        <h1>Todo (@TodoListViewModel.Count(todo => !todo.IsDone))</h1>
+
+        
+        <ul>
+            @foreach (var todo in todos)
+            {
+                <li>
+                    <input type="checkbox" @bind="todo.IsDone" />
+                    <input @bind="todo.Title" />
+                </li>
+            }
+        </ul>
+
+        <input placeholder="Something todo" @bind="newTodo" />
+        <button @onclick="AddTodo">Add todo</button>
+
+        <button @onclick=@(e => UpdateTodo(@context.User.Identity?.Name))>Update @context.User.Identity?.Name!</button>
+        *@
+    </Authorized>
+    <NotAuthorized>
+        <PageTitle>Not Authorized Todo</PageTitle>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    private string? CurrentUser { get; set; }
+
+    private List<ToDo> TodoListModel { get; set; }
+    private List<ToDoViewModel> TodoListViewModel { get; set; }
+    private string Item { get; set; }
+    private string Beskrivelse { get; set; }
+
+    private string ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+        if (user.Identity != null)
+        {
+            if (TodoListViewModel == null)
+            {
+                TodoListViewModel = new();
+            }
+
+            CurrentUser = user.Identity.Name;
+            if(CurrentUser != null)
+            {
+                TodoListViewModel.Clear();
+                TodoListModel = _toDoDBHandler.Read(CurrentUser, _toDoContext);
+                foreach (ToDo item in TodoListModel)
+                {
+                    if (item.ToDoItem != null && item.ToDoDescription != null)
+                    {
+                        TodoListViewModel.Add(new ToDoViewModel()
+                            {
+                                ToDoItem = _encryptionTest.UnProtect(item.ToDoItem),
+                                ToDoDescription = _encryptionTest.UnProtect(item.ToDoDescription),
+
+                            });
+                    }
+                }
+            }
+        }
+    }
+
+    private void Submit()
+    {
+        if(CurrentUser != null && Item != null && Beskrivelse != null)
+        {
+            Item = _encryptionTest.Protect(Item);
+            Beskrivelse = _encryptionTest.Protect(Beskrivelse);
+            _toDoDBHandler.Update(CurrentUser, Item, Beskrivelse, _toDoContext);
+        }
+        else
+        {
+            ErrorMessage = "Alle felter skal være udfyldt!";
+        }
+
+        Item = null;
+        Beskrivelse = null;
+        ErrorMessage = "Data Gemt!";
+
+        TodoListViewModel.Clear();
+        TodoListModel = _toDoDBHandler.Read(CurrentUser, _toDoContext);
+        foreach (ToDo item in TodoListModel)
+        {
+            TodoListViewModel.Add(new ToDoViewModel()
+                {
+                    ToDoItem = _encryptionTest.UnProtect(item.ToDoItem),
+                    ToDoDescription = _encryptionTest.UnProtect(item.ToDoDescription),
+                });
+        }
+    }
+
+    private void ValiderListWithHash()
+    {
+        if(TodoListModel != null)
+        {
+            CheckHash.OldList = TodoListModel;
+        }
+
+        _navigationManager.NavigateTo("/CheckHash");
+    }
+
+    //private void AddTodo()
+    //{
+    //    if (!string.IsNullOrWhiteSpace(newTodo))
+    //    {
+    //        todos.Add(new TodoItem { Title = newTodo });
+    //        newTodo = string.Empty;
+    //    }
+    //}
+
+    //private void UpdateTodo(dynamic userName)
+    //{
+    //    todos.Add(new TodoItem { Title = userName });
+    //}
+
+
+}

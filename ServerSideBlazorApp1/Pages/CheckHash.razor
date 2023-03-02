@@ -1,0 +1,57 @@
+﻿@using ServerSideBlazorApp1.Models;
+@inject ServerSideBlazorApp1.Codes.ToDoDbHandler _toDoDBHandler;
+@inject ServerSideBlazorApp1.Models.TodoDbContext _toDoContext;
+@inject ServerSideBlazorApp1.Codes.EncryptionTest _encryptionTest;
+
+@page "/CheckHash"
+
+<h3>CheckHash</h3>
+<hr />
+@if (IsListValid)
+{
+    <div>
+        Listen <b style="font-size:x-large; color:green">består</b> validerings prøve.
+    </div>
+}
+else
+{
+    <div>
+        Listen <b style="font-size:x-large; color:red">består IKKE</b> validerings prøve.
+    </div>
+}
+<div style="margin-top:10px">
+    <a href="/todo">Tilbage</a>
+</div>
+@code {
+    [Parameter]
+    public int HashValue { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    public string? CurrentUser { get; set; }
+
+    public static List<ToDo>? OldList { get; set; }
+
+    private bool IsListValid { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+        if(user.Identity != null)
+        {
+            CurrentUser = user.Identity.Name;
+        }
+
+        if(OldList != null)
+        {
+            List<ToDo> toDos = _toDoDBHandler.Read(CurrentUser, _toDoContext);
+
+            // toDos.Add(new ToDo() { ToDoUser = CurrentUser, ToDoItem = _encryptionTest.Protect("angreb"), ToDoDescription = _encryptionTest.Protect("angreb") });
+
+            HashSet<int> hashSet1 = new HashSet<int>(OldList.Select(x => x.GetHashCode()));
+            HashSet<int> hashSet2 = new HashSet<int>(toDos.Select(x => x.GetHashCode()));
+
+            IsListValid = hashSet1.SetEquals(hashSet2);
+        }
+    }
+}

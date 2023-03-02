@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using ServerSideBlazorApp1.Areas.Identity;
 using ServerSideBlazorApp1.Codes;
 using ServerSideBlazorApp1.Data;
+using ServerSideBlazorApp1.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+var toDCconnection = builder.Configuration.GetConnectionString("TodoConnection");
+builder.Services.AddDbContext<TodoDbContext>(options => options.UseSqlServer(toDCconnection));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -27,6 +32,8 @@ builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuth
 builder.Services.AddDataProtection();
 
 builder.Services.AddSingleton<EncryptionTest>();
+builder.Services.AddSingleton<ToDoDbHandler>();
+//builder.Services.AddSingleton<HashingTest>();
 
 var app = builder.Build();
 
