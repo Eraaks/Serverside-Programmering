@@ -4,8 +4,6 @@
 @inject ServerSideBlazorApp1.Codes.ToDoDbHandler _toDoDBHandler;
 @inject ServerSideBlazorApp1.Models.TodoDbContext _toDoContext;
 @inject NavigationManager _navigationManager;
-@*@inject HashingTest _hashingTest;*@
-@*@attribute [Authorize(Policy = "RequireAuthenticatedUser")]*@
 
 @page "/todo"
 
@@ -32,29 +30,35 @@
                 }
                 <hr />
                 <div style="text-align:center; margin: 0 auto;">
-                    <div style="text-align: left;">
+                    <div style="text-align: center;">
                         <b>Item:</b>
                         <br />
-                        <input type="text" style="width:100%;" @bind="Item"/>
+                        <input type="text" style="width:50%;" @bind="Item"/>
                     </div>
-                    <div style="text-align: left; margin-top: 10px;">
+                    <div style="text-align: center; margin-top: 10px;">
                         <b>Beskrivelse:</b>
                         <br />
-                        <input type="text" style="width:100%;" @bind="Beskrivelse" />
+                        <textarea style="width:50%;" @bind="Beskrivelse" />
                     </div>
 
-                    <input @onclick="Submit"
+                    <input @onclick=@(e => AddTodo(@context.User.Identity?.Name))
                         type="button"
                         class="btn-primary"
                         value="Submit"
-                        style="width:100%; height: 45px; margin-top:10px;"/>
+                        style="width:50%; height: 45px; margin-top:10px;"/>
                 </div>
 
-                <input @onclick="ValiderListWithHash"
+                <input @onclick=@(e => HashValider(@context.User.Identity?.Name, false))
                        type="button"
                        class="btn-danger"
                        value="Valider list med hash"
-                       style="width:100%; height: 45px; margin-top:10px;" />
+                       style="width: 50%; height: 45px; margin-top:10px;" />
+
+                <input @onclick=@(e => HashValider(@context.User.Identity?.Name, true))
+                       type="button"
+                       class="btn-danger"
+                       value="Valider list med hash og angreb"
+                       style="width: 50%; height: 45px; margin-top:10px;" />
             </div>
             <div class="col-md-4"></div>
         </div>
@@ -84,7 +88,8 @@
 </AuthorizeView>
 
 @code {
-    [CascadingParameter] private Task<AuthenticationState>? authenticationStateTask { get; set; }
+    [CascadingParameter] 
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
     private string? CurrentUser { get; set; }
 
     private List<ToDo> TodoListModel { get; set; }
@@ -126,13 +131,13 @@
         }
     }
 
-    private void Submit()
+    private void AddTodo(string userName)
     {
-        if(CurrentUser != null && Item != null && Beskrivelse != null)
+        if (userName != null && Item != null && Beskrivelse != null)
         {
             Item = _encryptionTest.Protect(Item);
             Beskrivelse = _encryptionTest.Protect(Beskrivelse);
-            _toDoDBHandler.Update(CurrentUser, Item, Beskrivelse, _toDoContext);
+            _toDoDBHandler.Insert(userName, Item, Beskrivelse, _toDoContext);
         }
         else
         {
@@ -144,7 +149,7 @@
         ErrorMessage = "Data Gemt!";
 
         TodoListViewModel.Clear();
-        TodoListModel = _toDoDBHandler.Read(CurrentUser, _toDoContext);
+        TodoListModel = _toDoDBHandler.Read(userName, _toDoContext);
         foreach (ToDo item in TodoListModel)
         {
             TodoListViewModel.Add(new ToDoViewModel()
@@ -155,29 +160,15 @@
         }
     }
 
-    private void ValiderListWithHash()
+    private void HashValider(string userName, bool simulateAttack)
     {
         if(TodoListModel != null)
         {
             CheckHash.OldList = TodoListModel;
+            CheckHash.CurrentUser = userName;
+            CheckHash.SimulateAttack = simulateAttack;
         }
 
         _navigationManager.NavigateTo("/CheckHash");
     }
-
-    //private void AddTodo()
-    //{
-    //    if (!string.IsNullOrWhiteSpace(newTodo))
-    //    {
-    //        todos.Add(new TodoItem { Title = newTodo });
-    //        newTodo = string.Empty;
-    //    }
-    //}
-
-    //private void UpdateTodo(dynamic userName)
-    //{
-    //    todos.Add(new TodoItem { Title = userName });
-    //}
-
-
 }

@@ -32,7 +32,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuth
 builder.Services.AddDataProtection();
 
 builder.Services.AddSingleton<EncryptionTest>();
-builder.Services.AddSingleton<ToDoDbHandler>();
+builder.Services.AddScoped<ToDoDbHandler>();
 //builder.Services.AddSingleton<HashingTest>();
 
 var app = builder.Build();

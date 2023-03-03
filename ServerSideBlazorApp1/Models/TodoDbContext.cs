@@ -29,10 +29,10 @@ public partial class TodoDbContext : DbContext
 
             entity.ToTable("ToDo");
 
-            entity.Property(e => e.ToDoUserId)
-                .ValueGeneratedNever()
-                .HasColumnName("ToDoUserID");
-            entity.Property(e => e.ToDoItem).HasMaxLength(50);
+            //entity.Property(e => e.ToDoUserId)
+            //    .ValueGeneratedNever()
+            //    .HasColumnName("ToDoUserID");
+            entity.Property(e => e.ToDoItem);
         });
 
         OnModelCreatingPartial(modelBuilder);

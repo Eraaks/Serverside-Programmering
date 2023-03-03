@@ -10,43 +10,64 @@
 @if (IsListValid)
 {
     <div>
-        Listen <b style="font-size:x-large; color:green">består</b> validerings prøve.
+        <b style="font-size:x-large; color:green">PASSED</b>
     </div>
 }
 else
 {
     <div>
-        Listen <b style="font-size:x-large; color:red">består IKKE</b> validerings prøve.
+        <b style="font-size:x-large; color:red">NOT PASSED</b>
     </div>
 }
+
+<div class="col-md-4" style="text-align: center; width: 100%;">
+    Old List: <br>
+    <div class="col-md-4" style="text-align: center; width: 100%;">
+        @if (OldList != null)
+        {
+            @foreach (var todo in OldList)
+            {
+                <p>Item: @todo.ToDoItem <br> Description: @todo.ToDoDescription</p> <br /> <br />
+            }
+        }
+    </div>
+    <br>
+    New List: <br>
+    <div class="col-md-4" style="text-align: center; width: 100%;">
+        @if (toDos != null)
+        {
+            @foreach (var todo in toDos)
+            {
+                <p>Item: @todo.ToDoItem <br> Description: @todo.ToDoDescription</p> <br /> <br />
+            }
+        }
+    </div>
+</div>
+
 <div style="margin-top:10px">
     <a href="/todo">Tilbage</a>
 </div>
 @code {
-    [Parameter]
-    public int HashValue { get; set; }
-
-    [CascadingParameter] private Task<AuthenticationState>? authenticationStateTask { get; set; }
-    public string? CurrentUser { get; set; }
+    public static string? CurrentUser { get; set; }
 
     public static List<ToDo>? OldList { get; set; }
 
+    public static bool SimulateAttack { get; set; }
+
     private bool IsListValid { get; set; }
+
+    private List<ToDo>? toDos { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await authenticationStateTask;
-        var user = authState.User;
-        if(user.Identity != null)
-        {
-            CurrentUser = user.Identity.Name;
-        }
-
         if(OldList != null)
         {
-            List<ToDo> toDos = _toDoDBHandler.Read(CurrentUser, _toDoContext);
+            toDos = _toDoDBHandler.Read(CurrentUser, _toDoContext);
 
-            // toDos.Add(new ToDo() { ToDoUser = CurrentUser, ToDoItem = _encryptionTest.Protect("angreb"), ToDoDescription = _encryptionTest.Protect("angreb") });
+            if (SimulateAttack)
+            {
+                toDos.Add(new ToDo() { ToDoUser = CurrentUser, ToDoItem = _encryptionTest.Protect("angreb"), ToDoDescription = _encryptionTest.Protect("angreb") }); 
+            }
 
             HashSet<int> hashSet1 = new HashSet<int>(OldList.Select(x => x.GetHashCode()));
             HashSet<int> hashSet2 = new HashSet<int>(toDos.Select(x => x.GetHashCode()));
