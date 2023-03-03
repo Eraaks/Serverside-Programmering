@@ -62,25 +62,6 @@
             </div>
             <div class="col-md-4"></div>
         </div>
-        @*
-        <h1>Todo (@TodoListViewModel.Count(todo => !todo.IsDone))</h1>
-
-        
-        <ul>
-            @foreach (var todo in todos)
-            {
-                <li>
-                    <input type="checkbox" @bind="todo.IsDone" />
-                    <input @bind="todo.Title" />
-                </li>
-            }
-        </ul>
-
-        <input placeholder="Something todo" @bind="newTodo" />
-        <button @onclick="AddTodo">Add todo</button>
-
-        <button @onclick=@(e => UpdateTodo(@context.User.Identity?.Name))>Update @context.User.Identity?.Name!</button>
-        *@
     </Authorized>
     <NotAuthorized>
         <PageTitle>Not Authorized Todo</PageTitle>
@@ -92,8 +73,8 @@
     private Task<AuthenticationState>? authenticationStateTask { get; set; }
     private string? CurrentUser { get; set; }
 
-    private List<ToDo> TodoListModel { get; set; }
-    private List<ToDoViewModel> TodoListViewModel { get; set; }
+    private List<ToDo>? TodoListModel { get; set; }
+    private List<ToDoViewModel>? TodoListViewModel { get; set; }
     private string Item { get; set; }
     private string Beskrivelse { get; set; }
 
